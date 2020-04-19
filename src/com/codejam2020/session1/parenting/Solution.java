@@ -2,7 +2,8 @@ package com.codejam2020.session1.parenting;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.Scanner;
+import java.util.*;
+
 public class Solution {
     static String IMPOSSIBLE = "IMPOSSIBLE";
     public static void main(String[] args) {
@@ -17,29 +18,54 @@ public class Solution {
             int[] scheduleJ = new int[60 * 24];
             String res = "";
 
-            // Iterate over schedule
-            for (int j = 0; j < activityNumber; j++) {
-                String inputs = in.nextLine().trim();
-                if (res.equals(IMPOSSIBLE)) {
-                    continue;
-                }
-                String[] inputTab = inputs.split("\\s+");
-                int minSchedule = Integer.parseInt(inputTab[0]);
-                int maxSchedule = Integer.parseInt(inputTab[1]);
+            // Iterate over activity schedules
+            Map<Integer, String> responses = new TreeMap<>();
+            List<Schedule> sortedSchedules = readAndSortActivities(in, activityNumber);
 
+            boolean impossible = false;
+            for (Schedule schedule : sortedSchedules) {
+                int minSchedule = schedule.minSchedule;
+                int maxSchedule = schedule.maxSchedule;
+                if (impossible) {
+                    break;
+                }
                 if (isScheduleFree(scheduleC, minSchedule, maxSchedule)) {
                     setSchedule(scheduleC, minSchedule, maxSchedule);
-                    res = res.concat("C");
+                    responses.put(schedule.order, "C");
                 } else if (isScheduleFree(scheduleJ, minSchedule, maxSchedule)) {
                     setSchedule(scheduleJ, minSchedule, maxSchedule);
-                    res = res.concat("J");
+                    responses.put(schedule.order, "J");
                 } else {
-                    res = IMPOSSIBLE;
+                    responses.put(schedule.order, IMPOSSIBLE);
+                    impossible = true;
                 }
-
             }
+
+            if (impossible) {
+                res = IMPOSSIBLE;
+            } else {
+                for (String val : responses.values()) {
+                    res = res.concat(val);
+                }
+            }
+
             System.out.println("Case #" + i + ": " + res);
         }
+    }
+
+    private static List<Schedule> readAndSortActivities(Scanner in, int activityNumber) {
+        List<Schedule> schedules = new ArrayList<>();
+        for (int j = 0; j < activityNumber; j++) {
+            String inputs = in.nextLine().trim();
+            String[] inputTab = inputs.split("\\s+");
+
+            int minSchedule = Integer.parseInt(inputTab[0]);
+            int maxSchedule = Integer.parseInt(inputTab[1]);
+            schedules.add(new Schedule(minSchedule, maxSchedule, j));
+        }
+
+        Collections.sort(schedules);
+        return schedules;
     }
 
     private static boolean isScheduleFree(int[] schedule, int min, int max) {
@@ -54,6 +80,24 @@ public class Solution {
     private static void setSchedule(int[] schedule, int min, int max) {
         for (int i = min; i < max; i++) {
             schedule[i] = 1;
+        }
+    }
+
+    static class Schedule implements Comparable<Schedule> {
+
+        public int minSchedule;
+        public int maxSchedule;
+        public int order;
+
+        @Override
+        public int compareTo(Schedule o) {
+            return minSchedule - o.minSchedule;
+        }
+
+        public Schedule(int minSchedule, int maxSchedule, int order) {
+            this.minSchedule = minSchedule;
+            this.maxSchedule = maxSchedule;
+            this.order = order;
         }
     }
 }
